@@ -16,7 +16,6 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-import streamlit.components.v1 as components
 from PIL import Image
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -105,8 +104,6 @@ def _login(username: str):
 
 def _logout():
     _log("LOGOUT", {"username": st.session_state.username})
-    # clear() safely removes widget-bound keys (like dark_mode) without
-    # raising StreamlitAPIException from direct assignment after instantiation
     st.session_state.clear()
     st.rerun()
 
@@ -145,45 +142,50 @@ def _inject_css():
     btn_hover_bg = "#2D3142"
     btn_border   = "#3D4058"
 
-    # ── Calendar CSS: ONLY injected in dark mode ──────────────
-    # In light mode, config.toml base="light" handles BaseUI
-    # natively — injecting CSS on top causes the broken patches.
-    if dark:
-        # Calendar popup is handled by _inject_dark_calendar_js() via JS
-        # (CSS injection cannot beat Styletron's dynamically-added rules).
-        # Only the static date input field needs CSS here.
-        cal_css = f"""
-    [data-testid="stDateInput"] > div,
-    [data-testid="stDateInput"] > div > div,
-    div[data-baseweb="input"],
-    div[data-baseweb="input"] > div {{
-        background-color: #232530 !important;
-        border-color: #3D4058 !important;
-    }}
+    # ── Calendar CSS Override ─────────────────────────────────
+    # Burada hem dark hem light mode için popover (takvim) içeriğini
+    # tamamen orijinal, tertemiz açık mod renklerine kilitliyoruz.
+    cal_css = f"""
+    /* Date input field colors based on theme */
     [data-testid="stDateInput"] input {{
-        background-color: #232530 !important;
-        color: #F4F5F7 !important;
-        border: 1px solid #3D4058 !important;
+        background-color: {"#232530" if dark else "#FFFFFF"} !important;
+        color: {"#F4F5F7" if dark else "#111827"} !important;
+        border: 1px solid {"#3D4058" if dark else "#E2E8F0"} !important;
         border-radius: 6px !important;
-        caret-color: #F4F5F7 !important;
     }}
-    div[data-baseweb="input"]:focus-within,
-    [data-testid="stDateInput"] input:focus {{
-        background-color: #232530 !important;
-        border-color: {accent} !important;
-        box-shadow: 0 0 0 2px rgba(37,99,235,0.25) !important;
-        outline: none !important;
-    }}"""
-    else:
-        # Light mode: only fix the text input field color,
-        # leave the popup entirely to Streamlit's native theme
-        cal_css = f"""
-    [data-testid="stDateInput"] input {{
+    
+    /* 🔒 KESİN ÇÖZÜM: Takvim Açılır Penceresini Orijinal Beyaz Haline Sabitleme 🔒 */
+    div[data-baseweb="popover"], 
+    div[data-baseweb="popover"] *, 
+    div[data-baseweb="calendar"],
+    div[data-baseweb="calendar"] *,
+    [role="grid"],
+    [role="grid"] *,
+    [role="gridcell"],
+    [role="gridcell"] * {{
         background-color: #FFFFFF !important;
         color: #111827 !important;
-        border: 1px solid #E2E8F0 !important;
-        border-radius: 6px !important;
-    }}"""
+        border-color: #E2E8F0 !important;
+    }}
+    
+    /* Takvim içi ay/yıl seçici dropdown menülerin yazıları */
+    div[data-baseweb="popover"] select {{
+        background-color: #FFFFFF !important;
+        color: #111827 !important;
+    }}
+
+    /* Gün başlıkları (Su, Mo, Tu...) belirgin olsun */
+    [role="columnheader"], [role="columnheader"] span {{
+        color: #6B7280 !important;
+    }}
+
+    /* Seçilen günün mavi yuvarlak kalması için */
+    div[data-baseweb="calendar"] [aria-selected="true"] div,
+    div[data-baseweb="calendar"] [aria-selected="true"] button {{
+        background-color: {accent} !important;
+        color: #FFFFFF !important;
+    }}
+    """
 
     st.markdown(f"""
     <style>
@@ -246,9 +248,6 @@ def _inject_css():
 
     /* ══════════════════════════════════════════════
        FILE UPLOADER
-       "Browse files" uses data-testid="baseButton-secondary"
-       — target both the testid AND the parent container
-       to guarantee the override wins over Streamlit's sheet.
     ══════════════════════════════════════════════ */
     [data-testid="stFileUploader"] section {{
         background-color: {card} !important;
@@ -264,7 +263,6 @@ def _inject_css():
         color: {text} !important;
         font-weight: 600 !important;
     }}
-    /* Browse files button — matched by both possible selectors */
     [data-testid="stFileUploader"] button,
     [data-testid="stFileUploadDropzone"] + div button,
     button[data-testid="baseButton-secondary"] {{
@@ -280,7 +278,6 @@ def _inject_css():
     button[data-testid="baseButton-secondary"] p {{
         color: #FFFFFF !important;
     }}
-    /* SVG upload icon */
     [data-testid="stFileUploader"] button svg *,
     button[data-testid="baseButton-secondary"] svg * {{
         fill: #FFFFFF !important;
@@ -318,7 +315,7 @@ def _inject_css():
     }}
 
     /* ══════════════════════════════════════════════
-       TEXT — scoped to stMain, never leaks to portals
+       TEXT
     ══════════════════════════════════════════════ */
     [data-testid="stMain"] p,
     [data-testid="stMain"] li,
@@ -390,15 +387,12 @@ def _inject_css():
         color: {text} !important; padding-bottom: 6px !important;
         border-bottom: 2px solid {accent} !important; margin-bottom: 16px !important;
     }}
-    .badge          {{ display: inline-block !important; padding: 3px 12px !important; border-radius: 999px !important; font-size: 0.75rem !important; font-weight: 700 !important; }}
+    .badge        {{ display: inline-block !important; padding: 3px 12px !important; border-radius: 999px !important; font-size: 0.75rem !important; font-weight: 700 !important; }}
     .badge-green  {{ background: #dcfce7 !important; color: #166534 !important; }}
     .badge-red    {{ background: #fee2e2 !important; color: #991b1b !important; }}
     .badge-yellow {{ background: #fef9c3 !important; color: #854d0e !important; }}
     .badge-blue   {{ background: #dbeafe !important; color: #1e40af !important; }}
 
-    /* ══════════════════════════════════════════════
-       CALENDAR (mode-specific block)
-    ══════════════════════════════════════════════ */
     {cal_css}
 
     /* ══════════════════════════════════════════════
@@ -554,7 +548,6 @@ def page_upload_image():
     with st.spinner("Running YOLOv12 detection…"):
         results = run_yolo_detection(image_array)
 
-    # ── Side-by-side images ──
     col_orig, col_det = st.columns(2)
     with col_orig:
         st.markdown("**Original Image**")
@@ -569,10 +562,9 @@ def page_upload_image():
         else:
             st.image(original, use_container_width=True)
             st.success("No defects detected — PCB looks good!")
-        st.caption(f"Defects found: **{results['total_detections']}**  •  "
+        st.caption(f"Defects found: **{results['total_detections']}** •  "
                    f"Processing time: **{results['processing_time_ms']} ms**")
 
-    # ── Detection table ──
     st.markdown("---")
     st.markdown('<div class="section-title">Detected Defects</div>', unsafe_allow_html=True)
 
@@ -604,7 +596,6 @@ def page_upload_image():
 def page_dashboard():
     st.markdown('<div class="section-title">Statistics & Dashboard</div>', unsafe_allow_html=True)
 
-    # ── Date filter ──
     c1, c2, c3 = st.columns([0.28, 0.28, 0.44])
     with c1:
         start_date = st.date_input("From", value=datetime.now().date() - timedelta(days=30))
@@ -620,7 +611,6 @@ def page_dashboard():
 
     stats = get_database_stats(start_date, end_date)
 
-    # ── KPI row ──
     k1, k2, k3, k4 = st.columns(4)
     kpi_data = [
         (k1, stats["total_analyzed"],             "PCBs Analyzed"),
@@ -637,12 +627,12 @@ def page_dashboard():
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # ── Charts ──
     dark = st.session_state.dark_mode
     grid_color  = "rgba(255,255,255,0.08)" if dark else "rgba(0,0,0,0.08)"
     text_color  = "#94A3B8"               if dark else "#6B7280"
     line_color  = "#2563EB"
     bar_color   = "#2563EB"
+    plotly_tmpl = "plotly_dark" if dark else "plotly_white"
 
     ch1, ch2 = st.columns(2)
 
@@ -662,6 +652,7 @@ def page_dashboard():
                 )
             )
             fig_line.update_layout(
+                template=plotly_tmpl,
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
                 margin=dict(l=0, r=0, t=8, b=0),
@@ -695,6 +686,7 @@ def page_dashboard():
                 )
             )
             fig_bar.update_layout(
+                template=plotly_tmpl,
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
                 margin=dict(l=0, r=0, t=8, b=0),
@@ -715,7 +707,6 @@ def page_dashboard():
         else:
             st.info("No data for selected range.")
 
-    # ── Recent detections ──
     st.markdown("---")
     st.markdown('<div class="section-title">Recent Detections (last 10)</div>', unsafe_allow_html=True)
 
@@ -764,83 +755,6 @@ def render_sidebar() -> str:
 
 
 # ─────────────────────────────────────────────────────────────
-# 10. DARK CALENDAR JS FIX
-# ─────────────────────────────────────────────────────────────
-
-def _inject_dark_calendar_js():
-    """
-    CSS cannot reliably override Styletron's dynamically-injected
-    calendar styles because Styletron adds new rules AFTER our
-    <style> block every time the popup opens, winning source-order ties.
-    JS sets inline styles directly — those always beat stylesheet rules.
-    window.parent.document works because the component iframe is same-origin.
-    """
-    components.html(
-        """
-        <script>
-        (function () {
-            var BG     = '#2D3142';
-            var TEXT   = '#F4F5F7';
-            var MUTED  = '#94A3B8';
-            var ACCENT = '#2563EB';
-            var BORDER = '#3D4058';
-
-            function paint() {
-                var doc = window.parent.document;
-                var pops = doc.querySelectorAll('[data-baseweb="popover"]');
-                if (!pops.length) return;
-
-                pops.forEach(function (pop) {
-                    // Paint every node dark first
-                    pop.querySelectorAll('*').forEach(function (el) {
-                        el.style.setProperty('background-color', BG, 'important');
-                        el.style.setProperty('color', TEXT, 'important');
-                        el.style.setProperty('border-color', BORDER, 'important');
-                    });
-
-                    // Day-of-week headers — muted colour
-                    pop.querySelectorAll('[role="columnheader"], [role="columnheader"] *').forEach(function (el) {
-                        el.style.setProperty('color', MUTED, 'important');
-                    });
-
-                    // All buttons — transparent bg
-                    pop.querySelectorAll('button').forEach(function (btn) {
-                        btn.style.setProperty('background-color', 'transparent', 'important');
-                        btn.style.setProperty('border', 'none', 'important');
-                        btn.style.setProperty('color', TEXT, 'important');
-                    });
-
-                    // Selected date button — accent
-                    pop.querySelectorAll('[aria-selected="true"] button, [aria-selected="true"] button *').forEach(function (el) {
-                        el.style.setProperty('background-color', ACCENT, 'important');
-                        el.style.setProperty('color', '#FFFFFF', 'important');
-                    });
-
-                    // Select dropdowns (month / year)
-                    pop.querySelectorAll('select').forEach(function (sel) {
-                        sel.style.setProperty('background-color', BG, 'important');
-                        sel.style.setProperty('color', TEXT, 'important');
-                    });
-                });
-            }
-
-            // Re-paint whenever the DOM changes (popup opens / navigates months)
-            var observer = new MutationObserver(paint);
-            observer.observe(window.parent.document.body, {
-                childList: true,
-                subtree: true
-            });
-
-            // Continuous poll covers any timing gaps
-            setInterval(paint, 150);
-        })();
-        </script>
-        """,
-        height=0,
-    )
-
-
-# ─────────────────────────────────────────────────────────────
 # 11. MAIN
 # ─────────────────────────────────────────────────────────────
 
@@ -853,8 +767,6 @@ def main():
         return
 
     _inject_css()
-    if st.session_state.dark_mode:
-        _inject_dark_calendar_js()
     page = render_sidebar()
 
     if page == "Live Camera":
