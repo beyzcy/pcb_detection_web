@@ -139,7 +139,6 @@ See [`extern/pcb/CAMERA_SETUP.md`](extern/pcb/CAMERA_SETUP.md) for detailed inst
 | Camera | OpenCV + DroidCam |
 | Image Processing | Pillow, NumPy |
 | Authentication | Werkzeug (bcrypt) |
-| Database | SQLite via sumeyyeturk/pcb-defect-detection |
 | Stats Engine | stats_engine.py (sumeyyeturk/pcb-defect-detection) |
 
 
