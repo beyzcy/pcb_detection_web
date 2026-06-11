@@ -12,10 +12,8 @@ from src.screens.dashboard_screen import page_dashboard
 from src.screens.live_detection_screen import page_live_camera
 from src.screens.manual_detection_screen import page_upload_image
 from src.styles.theme import inject_css
-from src.utils.logging_utils import setup_logging
 from src.utils.session import init_session
 
-setup_logging()
 init_session()
 
 

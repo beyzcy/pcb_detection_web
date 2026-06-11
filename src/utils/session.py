@@ -1,13 +1,7 @@
 import streamlit as st
 
 SESSION_DEFAULTS = {
-    "authenticated": False,
-    "session_id":    None,
-    "login_time":    None,
-    "last_activity": None,
-    "failed_attempts": 0,
-    "username":      None,
-    "dark_mode":     True,   # dark-first default
+    "dark_mode":     True,
     "camera_active": False,
     "camera_error":  None,
 }

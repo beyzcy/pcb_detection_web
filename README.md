@@ -10,8 +10,6 @@ Real-time PCB (Printed Circuit Board) defect detection web application built wit
 - **Manual Image Upload** — Upload PCB images and get instant YOLOv12 detection results
 - **Analytics Dashboard** — Daily trend, defect distribution, 4-week trend chart, weekly report, CSV export
 - **Light / Dark Mode** — Full theme support with sidebar toggle
-- **Secure Login** — Password hashing, rate limiting (3 attempts → 30 s lockout), session timeout (15 min)
-- **Audit Logging** — Security events written to `logs/app_security.log`
 
 ---
 
@@ -117,8 +115,6 @@ streamlit run app.py
 
 Open **http://localhost:8501**
 
-**Demo login:** `admin123`
-
 ---
 
 ## Camera Setup (DroidCam)
@@ -158,11 +154,7 @@ See [`extern/pcb/CAMERA_SETUP.md`](extern/pcb/CAMERA_SETUP.md) for detailed inst
 
 ---
 
-## Security
+## Notes
 
-- Werkzeug bcrypt password hashing
-- Rate limiting — 3 failed attempts → 30 s lockout
-- Session timeout — auto logout after 15 min inactivity
-- Audit log — all login/logout events in `logs/app_security.log`
-- File upload limit — 10 MB max
-- `.env`, `models/`, `logs/`, `extern/` excluded from git
+- `.env`, `models/`, `logs/`, `extern/` are excluded from git
+- File upload limit: 10 MB max
