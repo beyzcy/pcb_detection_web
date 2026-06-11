@@ -142,19 +142,9 @@ See [`extern/pcb/CAMERA_SETUP.md`](extern/pcb/CAMERA_SETUP.md) for detailed inst
 | Database | SQLite via sumeyyeturk/pcb-defect-detection |
 | Stats Engine | stats_engine.py (sumeyyeturk/pcb-defect-detection) |
 
----
-
-## Team Integration
-
-| Section | Owner | Integration point |
-|---|---|---|
-| YOLO Model (`best.pt`) | rubukk | `models/best.pt` → `src/real/real_yolo.py` |
-| Database + Stats | sumeyyeturk | `extern/pcb-defect-detection/` → `src/real/real_database.py` |
-| Web UI | beyzcy | `app.py` + `src/` |
 
 ---
 
 ## Notes
 
-- `.env`, `models/`, `logs/`, `extern/` are excluded from git
 - File upload limit: 10 MB max
