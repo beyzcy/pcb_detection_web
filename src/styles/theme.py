@@ -254,8 +254,12 @@ def inject_css():
     }}
     [data-testid="stFileUploader"] section span,
     [data-testid="stFileUploader"] section p,
-    [data-testid="stFileUploader"] section small {{
-        color: {text2} !important;
+    [data-testid="stFileUploader"] section small,
+    [data-testid="stFileUploaderDropzoneInstructions"] span,
+    [data-testid="stFileUploaderDropzoneInstructions"] p,
+    [data-testid="stFileUploaderDropzoneInstructions"] small,
+    [data-testid="stFileUploader"] * {{
+        color: #FFFFFF !important;
     }}
     [data-testid="stFileUploader"] label {{
         color: {text} !important;
@@ -460,6 +464,287 @@ def inject_css():
     {cal_css}
 
     /* ══════════════════════════════════════════════
+       TOP STATUS BAR
+    ══════════════════════════════════════════════ */
+    .status-bar {{
+        display: flex !important;
+        align-items: center !important;
+        gap: 0 !important;
+        background: {"#0A1628" if dark else "#FFFFFF"} !important;
+        border: 1px solid {border} !important;
+        border-radius: 10px !important;
+        padding: 10px 20px !important;
+        margin-bottom: 6px !important;
+        flex-wrap: wrap !important;
+    }}
+    .sb-item {{
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        padding: 0 16px !important;
+    }}
+    .sb-sep {{
+        width: 1px !important;
+        height: 20px !important;
+        background: {border} !important;
+    }}
+    .sb-label {{
+        font-size: 0.62rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.1em !important;
+        text-transform: uppercase !important;
+        color: {muted} !important;
+    }}
+    .sb-val {{
+        font-size: 0.82rem !important;
+        font-weight: 700 !important;
+        color: {text} !important;
+    }}
+    .val-green {{ color: #00E676 !important; }}
+    .val-gray  {{ color: #6B8CAE !important; }}
+    .sb-dot {{ display:inline-block;width:8px;height:8px;border-radius:50%; }}
+    .dot-green {{ background:#00E676 !important; box-shadow:0 0 6px #00E676 !important; }}
+    .dot-gray  {{ background:#3A5A7A !important; }}
+    .live-badge {{
+        display: inline-flex !important;
+        align-items: center !important;
+        padding: 3px 10px !important;
+        background: rgba(0,230,118,0.12) !important;
+        color: #00E676 !important;
+        border: 1px solid rgba(0,230,118,0.35) !important;
+        border-radius: 999px !important;
+        font-size: 0.68rem !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.08em !important;
+    }}
+    .live-badge-off {{
+        display: inline-flex !important;
+        align-items: center !important;
+        padding: 3px 10px !important;
+        background: rgba(107,140,174,0.1) !important;
+        color: #6B8CAE !important;
+        border: 1px solid rgba(107,140,174,0.3) !important;
+        border-radius: 999px !important;
+        font-size: 0.68rem !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.08em !important;
+    }}
+
+    /* ══════════════════════════════════════════════
+       SCANNER FRAME
+    ══════════════════════════════════════════════ */
+    .scanner-frame {{
+        position: relative !important;
+        background: {"#070E1A" if dark else "#F0F4F8"} !important;
+        border: 1px solid {border} !important;
+        border-radius: 12px !important;
+        overflow: hidden !important;
+        padding: 4px !important;
+    }}
+    .corner {{
+        position: absolute !important;
+        width: 18px !important;
+        height: 18px !important;
+        z-index: 10 !important;
+        pointer-events: none !important;
+    }}
+    .corner-tl {{ top:8px; left:8px; border-top:2px solid {ACCENT}; border-left:2px solid {ACCENT}; border-radius:3px 0 0 0; }}
+    .corner-tr {{ top:8px; right:8px; border-top:2px solid {ACCENT}; border-right:2px solid {ACCENT}; border-radius:0 3px 0 0; }}
+    .corner-bl {{ bottom:8px; left:8px; border-bottom:2px solid {ACCENT}; border-left:2px solid {ACCENT}; border-radius:0 0 0 3px; }}
+    .corner-br {{ bottom:8px; right:8px; border-bottom:2px solid {ACCENT}; border-right:2px solid {ACCENT}; border-radius:0 0 3px 0; }}
+    .board-info-bar {{
+        display: flex !important;
+        gap: 0 !important;
+        background: {"rgba(6,11,20,0.9)" if dark else "rgba(240,244,248,0.95)"} !important;
+        border-top: 1px solid {border} !important;
+        padding: 8px 16px !important;
+        flex-wrap: wrap !important;
+    }}
+    .bi-item {{
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 1px !important;
+        padding: 0 24px 0 0 !important;
+    }}
+    .bi-label {{
+        font-size: 0.6rem !important;
+        color: {muted} !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.08em !important;
+        text-transform: uppercase !important;
+    }}
+    .bi-val {{
+        font-size: 0.8rem !important;
+        font-weight: 700 !important;
+        color: {text} !important;
+        display: flex !important;
+        align-items: center !important;
+    }}
+
+    /* ══════════════════════════════════════════════
+       DETECTION SUMMARY MINI GRID
+    ══════════════════════════════════════════════ */
+    .mini-stats-grid {{
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px !important;
+        margin-bottom: 4px !important;
+    }}
+    .mini-stat-card {{
+        background: {card} !important;
+        border: 1px solid {border} !important;
+        border-radius: 10px !important;
+        padding: 12px 14px !important;
+    }}
+    .ms-green  {{ border-left: 3px solid #00E676 !important; }}
+    .ms-red    {{ border-left: 3px solid #FF1744 !important; }}
+    .ms-accent {{ border-left: 3px solid {ACCENT} !important; }}
+    .ms-label {{
+        font-size: 0.6rem !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.1em !important;
+        text-transform: uppercase !important;
+        color: {muted} !important;
+        margin-bottom: 4px !important;
+    }}
+    .ms-value {{
+        font-size: 1.35rem !important;
+        font-weight: 800 !important;
+        color: {text} !important;
+        letter-spacing: -0.02em !important;
+        line-height: 1.1 !important;
+    }}
+    .ms-sub {{
+        font-size: 0.68rem !important;
+        color: {muted} !important;
+        margin-top: 2px !important;
+        font-weight: 600 !important;
+    }}
+
+    /* ══════════════════════════════════════════════
+       LIVE DEFECTS LIST
+    ══════════════════════════════════════════════ */
+    .live-defects-list {{
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 4px !important;
+    }}
+    .ld-list-row {{
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        padding: 7px 10px !important;
+        background: {card} !important;
+        border-radius: 8px !important;
+        border: 1px solid {border} !important;
+    }}
+    .ld-dot {{
+        width: 8px !important;
+        height: 8px !important;
+        border-radius: 50% !important;
+        flex-shrink: 0 !important;
+    }}
+    .ld-time {{
+        font-size: 0.68rem !important;
+        color: {muted} !important;
+        font-weight: 600 !important;
+        min-width: 54px !important;
+        font-family: monospace !important;
+    }}
+    .ld-type {{
+        font-size: 0.78rem !important;
+        font-weight: 700 !important;
+        flex: 1 !important;
+    }}
+    .ld-conf {{
+        font-size: 0.72rem !important;
+        font-weight: 700 !important;
+        color: {muted} !important;
+    }}
+
+    /* ══════════════════════════════════════════════
+       INSPECTION LOG
+    ══════════════════════════════════════════════ */
+    .inspection-log {{
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 3px !important;
+        background: {card} !important;
+        border: 1px solid {border} !important;
+        border-radius: 10px !important;
+        padding: 10px !important;
+        font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+    }}
+    .log-row {{
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+        padding: 4px 6px !important;
+        border-radius: 5px !important;
+        font-size: 0.75rem !important;
+    }}
+    .log-tag {{
+        font-size: 0.65rem !important;
+        font-weight: 800 !important;
+        padding: 1px 6px !important;
+        border-radius: 4px !important;
+        flex-shrink: 0 !important;
+    }}
+    .tag-detect {{
+        background: rgba(255,64,105,0.15) !important;
+        color: #FF4069 !important;
+        border: 1px solid rgba(255,64,105,0.3) !important;
+    }}
+    .log-time {{
+        color: {muted} !important;
+        font-size: 0.7rem !important;
+        min-width: 56px !important;
+    }}
+    .log-type {{
+        font-weight: 700 !important;
+        flex: 1 !important;
+    }}
+    .log-conf {{
+        color: {muted} !important;
+        font-size: 0.7rem !important;
+    }}
+
+    /* ══════════════════════════════════════════════
+       SIDEBAR MODEL INFO CARD
+    ══════════════════════════════════════════════ */
+    .model-info-card {{
+        background: rgba(0,168,255,0.06) !important;
+        border: 1px solid rgba(0,168,255,0.15) !important;
+        border-radius: 10px !important;
+        padding: 12px 14px !important;
+        margin-top: 16px !important;
+    }}
+    .mi-label {{
+        font-size: 0.6rem !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.1em !important;
+        text-transform: uppercase !important;
+        color: #6B8CAE !important;
+        margin-bottom: 3px !important;
+    }}
+    .mi-val {{
+        font-size: 0.85rem !important;
+        font-weight: 700 !important;
+        color: #E8F4FF !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+    }}
+    .mi-badge {{
+        font-size: 0.6rem !important;
+        background: rgba(0,168,255,0.2) !important;
+        color: #00A8FF !important;
+        padding: 1px 6px !important;
+        border-radius: 4px !important;
+        font-weight: 700 !important;
+    }}
+
+    /* ══════════════════════════════════════════════
        PAGE HEADER
     ══════════════════════════════════════════════ */
     .page-header {{
@@ -637,6 +922,28 @@ def inject_css():
         color: {text} !important;
     }}
     .ld-val.accent {{ color: {ACCENT} !important; }}
+
+    /* ══════════════════════════════════════════════
+       SIDEBAR — ALWAYS VISIBLE, NO COLLAPSE
+    ══════════════════════════════════════════════ */
+    /* Force sidebar open regardless of saved state */
+    [data-testid="stSidebar"] {{
+        transform: translateX(0) !important;
+        min-width: 244px !important;
+        width: 244px !important;
+        left: 0 !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }}
+    /* Hide the reopen arrow that appears when collapsed */
+    [data-testid="collapsedControl"],
+    button[data-testid="baseButton-header"],
+    [data-testid="stSidebarCollapseButton"],
+    [data-testid="stSidebar"] button[kind="header"],
+    section[data-testid="stSidebar"] > div > div > button {{
+        display: none !important;
+    }}
 
     /* ══════════════════════════════════════════════
        HIDE STREAMLIT CHROME (header bar + toolbar)

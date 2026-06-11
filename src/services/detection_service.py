@@ -2,13 +2,28 @@
 Service layer — the only boundary between UI and backend.
 Swap mock imports for real implementations here when the backend is ready.
 """
+import os
 
 import numpy as np
 import pandas as pd
 
-from src.mock.mock_camera import get_camera_stream
-from src.mock.mock_database import get_database
-from src.mock.mock_yolo import get_yolo_model
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
+_USE_REAL = os.getenv("USE_REAL_BACKEND", "false").lower() == "true"
+
+if _USE_REAL:
+    from src.real.real_camera import get_camera_stream
+    from src.real.real_database import get_database
+    from src.real.real_yolo import get_yolo_model
+else:
+    from src.mock.mock_camera import get_camera_stream
+    from src.mock.mock_database import get_database
+    from src.mock.mock_yolo import get_yolo_model
+
 from src.utils.image_utils import draw_boxes_on_image
 
 

@@ -6,3 +6,4 @@ logs/
 *.db
 models/
 .streamlit/secrets.toml
+extern/
