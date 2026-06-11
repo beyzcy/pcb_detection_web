@@ -6,12 +6,9 @@ from src.constants.config import APP_MODEL, APP_VERSION
 def render_sidebar() -> str:
     with st.sidebar:
         st.markdown("""
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
-            <div style="width:36px;height:36px;background:linear-gradient(135deg,#00A8FF,#0066CC);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;">🔬</div>
-            <div>
-                <div style="font-size:0.95rem;font-weight:800;color:#FFFFFF;letter-spacing:-0.01em;">PCB Vision AI</div>
-                <div style="font-size:0.65rem;color:#6B8CAE;font-weight:500;">Automated PCB Diagnostics</div>
-            </div>
+        <div style="margin-bottom:4px;">
+            <div style="font-size:0.95rem;font-weight:800;color:#FFFFFF;letter-spacing:-0.01em;">PCB Vision AI</div>
+            <div style="font-size:0.65rem;color:#6B8CAE;font-weight:500;">Automated PCB Diagnostics</div>
         </div>
         """, unsafe_allow_html=True)
         st.markdown("---")
