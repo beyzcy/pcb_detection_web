@@ -1,17 +1,30 @@
 # PCB Vision AI — YOLOv12 PCB Defect Detection System
 
-A Streamlit web application for real-time PCB (Printed Circuit Board) defect detection using a YOLOv12 model. Built as a graduation project with a mock backend that is ready for real backend integration.
+Real-time PCB (Printed Circuit Board) defect detection web application built with Streamlit and YOLOv12. Features live camera inspection via DroidCam, manual image upload analysis, and an analytics dashboard backed by SQLite.
 
 ---
 
 ## Features
 
-- **Live Camera Analysis** — Real-time PCB inspection with bounding box overlay
-- **Image Upload & Analysis** — Upload PCB images and get instant defect detection results
-- **Statistics Dashboard** — Interactive charts (daily defect counts, defect type distribution) and KPI metrics
-- **Light / Dark Mode** — Full theme support with a sidebar toggle
-- **Secure Login** — Password authentication with rate limiting and session timeout
-- **Audit Logging** — Security events logged to `logs/app_security.log`
+- **Live Camera Inspection** — Real-time PCB analysis with bounding box overlay (DroidCam / USB webcam)
+- **Manual Image Upload** — Upload PCB images and get instant YOLOv12 detection results
+- **Analytics Dashboard** — Daily trend, defect distribution, 4-week trend chart, weekly report, CSV export
+- **Light / Dark Mode** — Full theme support with sidebar toggle
+- **Secure Login** — Password hashing, rate limiting (3 attempts → 30 s lockout), session timeout (15 min)
+- **Audit Logging** — Security events written to `logs/app_security.log`
+
+---
+
+## Detected Defect Types
+
+| Defect | Severity |
+|---|---|
+| Short Circuit | High |
+| Open Circuit | High |
+| Missing Hole | Medium |
+| Mouse Bite | Medium |
+| Spur | Medium |
+| Excess Copper | Medium |
 
 ---
 
@@ -19,30 +32,34 @@ A Streamlit web application for real-time PCB (Printed Circuit Board) defect det
 
 ```
 pcb_detection_web/
-├── app.py                  # Main Streamlit application
-├── backend_mock.py         # Mock backend (camera, YOLO model, database)
-├── requirements.txt        # Python dependencies
-├── .gitignore
-├── .streamlit/
-│   └── config.toml         # Streamlit theme configuration
-└── logs/                   # Auto-created on first run
-    └── app_security.log
+├── app.py                          # Streamlit entry point
+├── requirements.txt
+├── .env.example                    # Copy to .env and fill in
+├── .streamlit/config.toml
+├── models/                         # Place best.pt here (not in git)
+├── extern/                         # External repos — clone manually (not in git)
+│   ├── pcb-defect-detection/       # sumeyyeturk — database.py, stats_engine.py
+│   └── pcb/                        # rubukk — model weights reference
+└── src/
+    ├── real/                       # Real backend implementations
+    │   ├── real_camera.py          # OpenCV + DroidCam auto-detection
+    │   ├── real_yolo.py            # ultralytics YOLOv12
+    │   └── real_database.py        # Adapter for sumeyyeturk/pcb-defect-detection
+    ├── services/
+    │   └── detection_service.py    # Service layer (UI ↔ Backend boundary)
+    ├── components/
+    │   ├── dashboard/              # Analytics widgets
+    │   ├── live/                   # Camera feed + system metrics
+    │   └── manual/                 # Image upload + results
+    ├── screens/                    # Page-level Streamlit screens
+    ├── constants/                  # Colors, config, defect types
+    ├── styles/                     # CSS theme injection
+    └── utils/                      # Logging, image drawing, session
 ```
 
 ---
 
-## Detected Defect Types
-
-| Defect | Description |
-|---|---|
-| Short Circuit | Unintended conductive path between traces |
-| Open Circuit | Broken trace or missing connection |
-| Solder Bridge | Excess solder joining adjacent pads |
-| Missing Component | Component absent from its footprint |
-
----
-
-## Getting Started
+## Setup
 
 ### 1. Clone the repository
 
@@ -51,59 +68,68 @@ git clone <repo-url>
 cd pcb_detection_web
 ```
 
-### 2. Install dependencies
+### 2. Clone external dependencies
+
+```bash
+git clone https://github.com/sumeyyeturk/pcb-defect-detection extern/pcb-defect-detection
+```
+
+### 3. Add the YOLO model
+
+Copy `best.pt` into the `models/` directory:
+
+```
+models/best.pt
+```
+
+### 4. Install Python dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Run the app
+### 5. Configure environment
 
 ```bash
-python -m streamlit run app.py
+cp .env.example .env
 ```
 
-Then open **http://localhost:8501** in your browser.
+Edit `.env`:
 
-**Demo login password:** `admin123`
+```env
+# DroidCam via USB (recommended — index after built-in webcam)
+CAMERA_SOURCE=1
+
+# DroidCam via Wi-Fi
+# CAMERA_SOURCE=http://192.168.x.x:4747/video
+
+# Built-in webcam only
+# CAMERA_SOURCE=0
+
+YOLO_MODEL_PATH=models/best.pt
+```
+
+### 6. Run
+
+```bash
+streamlit run app.py
+```
+
+Open **http://localhost:8501**
+
+**Demo login:** `admin123`
 
 ---
 
-## Backend Integration Guide
+## Camera Setup (DroidCam)
 
-The app currently runs with a mock backend (`backend_mock.py`). When the real backend is ready, replace the following mock functions:
+1. Install **DroidCam** on your phone ([Android](https://play.google.com/store/apps/details?id=com.dev47apps.droidcam) / [iOS](https://apps.apple.com/us/app/droidcam-webcam-pc/id1510258100))
+2. Install the [DroidCam PC client](https://www.dev47apps.com/droidcam/windows/)
+3. Connect phone via USB or Wi-Fi through the PC client
+4. Set `CAMERA_SOURCE=1` in `.env` (USB) or the HTTP URL (Wi-Fi)
+5. Start the app — the camera feed will appear when you press **Start Inspection**
 
-### Camera
-```python
-# backend_mock.py — get_camera_stream()
-# Replace:
-return generate_mock_pcb_image()
-
-# With:
-import cv2
-cap = cv2.VideoCapture(0)
-ret, frame = cap.read()
-return frame if ret else None
-```
-
-### YOLO Model
-```python
-# backend_mock.py — MockYOLOModel.predict()
-# Replace the mock return with:
-results = self.model(frame)   # ultralytics YOLO
-return self._parse_results(results)
-```
-
-### Database
-```python
-# backend_mock.py — MockDatabase
-# Replace in-memory lists with:
-import sqlite3
-self.conn = sqlite3.connect("pcb_system.db")
-# Then run SQL queries as needed
-```
-
-All function signatures and return formats remain identical — `app.py` imports do not need to change.
+See [`extern/pcb/CAMERA_SETUP.md`](extern/pcb/CAMERA_SETUP.md) for detailed instructions.
 
 ---
 
@@ -111,28 +137,32 @@ All function signatures and return formats remain identical — `app.py` imports
 
 | Layer | Technology |
 |---|---|
-| Frontend | Streamlit 1.57 |
+| UI Framework | Streamlit |
 | Charts | Plotly |
 | AI Model | YOLOv12 (ultralytics) |
+| Camera | OpenCV + DroidCam |
 | Image Processing | Pillow, NumPy |
-| Authentication | Werkzeug password hashing |
-| Database (mock) | In-memory Python lists |
-| Database (real) | SQLite |
+| Authentication | Werkzeug (bcrypt) |
+| Database | SQLite via sumeyyeturk/pcb-defect-detection |
+| Stats Engine | stats_engine.py (sumeyyeturk/pcb-defect-detection) |
 
 ---
 
-## Security Features
+## Team Integration
 
-- Bcrypt password hashing via Werkzeug
-- Rate limiting — 3 failed attempts trigger a 30-second lockout
-- Session timeout — automatic logout after 15 minutes of inactivity
-- All login/logout events written to `logs/app_security.log`
-- File upload size limit — 10 MB max
+| Section | Owner | Integration point |
+|---|---|---|
+| YOLO Model (`best.pt`) | rubukk | `models/best.pt` → `src/real/real_yolo.py` |
+| Database + Stats | sumeyyeturk | `extern/pcb-defect-detection/` → `src/real/real_database.py` |
+| Web UI | beyzcy | `app.py` + `src/` |
 
 ---
 
-## Notes
+## Security
 
-- The `logs/` directory is created automatically on first run and is excluded from git via `.gitignore`
-- The `models/` directory should contain `yolo12.pt` when using the real backend
-- All paths in the codebase are relative — no machine-specific configuration required
+- Werkzeug bcrypt password hashing
+- Rate limiting — 3 failed attempts → 30 s lockout
+- Session timeout — auto logout after 15 min inactivity
+- Audit log — all login/logout events in `logs/app_security.log`
+- File upload limit — 10 MB max
+- `.env`, `models/`, `logs/`, `extern/` excluded from git

@@ -56,7 +56,7 @@ def render_right_panel() -> None:
         <div class="mini-stat-card ms-accent">
             <div class="ms-label">ACCURACY</div>
             <div class="ms-value" style="color:{ACCENT};">{accuracy:.1f}%</div>
-            <div class="ms-sub">+1.2% ↑</div>
+            <div class="ms-sub">&nbsp;</div>
         </div>""", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
