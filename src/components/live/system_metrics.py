@@ -6,10 +6,12 @@ from src.services.detection_service import get_recent_detections, get_database_s
 from src.constants.colors import ACCENT
 
 _DEFECT_COLORS = {
-    "Short Circuit":     "#FF4069",
-    "Open Circuit":      "#FF9100",
-    "Solder Bridge":     "#FFD600",
-    "Missing Component": "#00A8FF",
+    "Short Circuit": "#FF3232",
+    "Open Circuit":  "#FF7800",
+    "Missing Hole":  "#FFD200",
+    "Mouse Bite":    "#C864FF",
+    "Spur":          "#00C864",
+    "Excess Copper": "#00A8FF",
 }
 
 

@@ -17,6 +17,17 @@ except ImportError:
 
 _MODEL_PATH = os.getenv("YOLO_MODEL_PATH", "models/best.pt")
 
+# Normalize rubukk/pcb model class names → canonical display names
+# (matches sumeyyeturk's defect_types table + our UI constants)
+_LABEL_MAP: dict[str, str] = {
+    "missing_hole":    "Missing Hole",
+    "mouse_bite":      "Mouse Bite",
+    "open_circuit":    "Open Circuit",
+    "short":           "Short Circuit",
+    "spur":            "Spur",
+    "spurious_copper": "Excess Copper",
+}
+
 
 class RealYOLOModel:
     def __init__(self, model_path: str = _MODEL_PATH):
@@ -36,11 +47,11 @@ class RealYOLOModel:
             for box in r.boxes:
                 x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
                 cls_id = int(box.cls[0])
-                conf = float(box.conf[0])
-                label = r.names[cls_id]
+                raw_label = r.names[cls_id]
+                label = _LABEL_MAP.get(raw_label, raw_label)
                 detections.append({
                     "type":       label,
-                    "confidence": round(conf, 2),
+                    "confidence": round(float(box.conf[0]), 2),
                     "box":        [x1, y1, x2, y2],
                     "center":     [(x1 + x2) // 2, (y1 + y2) // 2],
                     "area":       (x2 - x1) * (y2 - y1),

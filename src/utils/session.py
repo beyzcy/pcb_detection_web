@@ -9,6 +9,7 @@ SESSION_DEFAULTS = {
     "username":      None,
     "dark_mode":     True,   # dark-first default
     "camera_active": False,
+    "camera_error":  None,
 }
 
 

@@ -1,22 +1,24 @@
-import pandas as pd
+import time
+
 import streamlit as st
 
-from src.services.detection_service import annotate_frame, get_camera_frame, run_yolo_detection, get_recent_detections
+from src.services.detection_service import annotate_frame, get_camera_frame, run_yolo_detection, get_recent_detections, save_analysis
 from src.utils.logging_utils import log_event
 
 _BOARD_ID   = "PCB-2025-06-11-001"
 _RESOLUTION = "1280 × 720"
 
 _DEFECT_COLORS = {
-    "Short Circuit":     "#FF4069",
-    "Open Circuit":      "#FF9100",
-    "Solder Bridge":     "#FFD600",
-    "Missing Component": "#00A8FF",
+    "Short Circuit": "#FF3232",
+    "Open Circuit":  "#FF7800",
+    "Missing Hole":  "#FFD200",
+    "Mouse Bite":    "#C864FF",
+    "Spur":          "#00C864",
+    "Excess Copper": "#00A8FF",
 }
 
 
 def render_camera_feed() -> None:
-    # Scanner frame
     st.markdown("""
     <div class="scanner-frame">
         <div class="corner corner-tl"></div>
@@ -28,25 +30,34 @@ def render_camera_feed() -> None:
     frame_slot = st.empty()
 
     if st.session_state.camera_active:
-        frame   = get_camera_frame()
-        results = run_yolo_detection(frame)
-        annotated = annotate_frame(frame, results["detections"])
-        frame_slot.image(annotated, use_container_width=True)
-        log_event("CAMERA_FRAME", {
-            "detections": results["total_detections"],
-            "ms":         results["processing_time_ms"],
-        })
+        try:
+            frame     = get_camera_frame()
+            results   = run_yolo_detection(frame)
+            annotated = annotate_frame(frame, results["detections"])
+            frame_slot.image(annotated, use_container_width=True)
+            save_analysis("live_feed", results)
+            log_event("CAMERA_FRAME", {
+                "detections": results["total_detections"],
+                "ms":         results["processing_time_ms"],
+            })
+            st.session_state.camera_error = None
+        except RuntimeError as e:
+            st.session_state.camera_active = False
+            st.session_state.camera_error  = str(e)
     else:
-        frame_slot.markdown("""
-        <div class="stream-offline">
-            <div class="stream-offline-icon">⊘</div>
-            <div class="stream-offline-title">Stream Offline</div>
-            <div class="stream-offline-sub">Press START INSPECTION to begin live detection</div>
-        </div>""", unsafe_allow_html=True)
+        if st.session_state.get("camera_error"):
+            frame_slot.error(f"Kamera hatası: {st.session_state.camera_error}")
+        else:
+            frame_slot.markdown("""
+            <div class="stream-offline">
+                <div class="stream-offline-icon">⊘</div>
+                <div class="stream-offline-title">Stream Offline</div>
+                <div class="stream-offline-sub">Press START INSPECTION to begin live detection</div>
+            </div>""", unsafe_allow_html=True)
 
     # Board info bar
-    scan_mode  = "CONTINUOUS" if st.session_state.camera_active else "STANDBY"
-    dot_class  = "dot-green" if st.session_state.camera_active else "dot-gray"
+    scan_mode = "CONTINUOUS" if st.session_state.camera_active else "STANDBY"
+    dot_class = "dot-green" if st.session_state.camera_active else "dot-gray"
     st.markdown(f"""
     <div class="board-info-bar">
         <div class="bi-item">
@@ -65,7 +76,7 @@ def render_camera_feed() -> None:
             </span>
         </div>
     </div>
-    </div>""", unsafe_allow_html=True)  # closes scanner-frame
+    </div>""", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -75,18 +86,36 @@ def render_camera_feed() -> None:
         with b1:
             if st.button("⏹  Stop Inspection", use_container_width=True):
                 st.session_state.camera_active = False
+                st.session_state.camera_error  = None
                 st.rerun()
         with b2:
             st.button("⏸  Pause", use_container_width=True)
         with b3:
             st.button("📷  Snapshot", use_container_width=True)
     else:
-        if st.button("▶  Start Inspection", use_container_width=True):
-            st.session_state.camera_active = True
-            st.rerun()
+        if st.session_state.get("camera_error"):
+            col_btn, col_clear = st.columns([0.7, 0.3])
+            with col_btn:
+                if st.button("▶  Start Inspection", use_container_width=True):
+                    st.session_state.camera_active = True
+                    st.session_state.camera_error  = None
+                    st.rerun()
+            with col_clear:
+                if st.button("✕  Clear Error", use_container_width=True):
+                    st.session_state.camera_error = None
+                    st.rerun()
+        else:
+            if st.button("▶  Start Inspection", use_container_width=True):
+                st.session_state.camera_active = True
+                st.session_state.camera_error  = None
+                st.rerun()
 
-    # Inspection log
     _render_inspection_log()
+
+    # Canlı döngü
+    if st.session_state.camera_active:
+        time.sleep(0.1)  # ~10 FPS
+        st.rerun()
 
 
 def _render_inspection_log():
@@ -98,7 +127,6 @@ def _render_inspection_log():
         st.caption("No log entries yet.")
         return
 
-    # Render each log row individually
     for _, r in recent.iterrows():
         ts = r["timestamp"]
         time_str = ts.strftime("%H:%M:%S") if hasattr(ts, "strftime") else str(ts)

@@ -6,11 +6,17 @@ from src.components.dashboard.daily_chart import render_daily_chart
 from src.components.dashboard.distribution_chart import render_distribution_chart
 from src.components.dashboard.kpi_row import render_kpi_row
 from src.components.dashboard.recent_table import render_recent_table
+from src.components.dashboard.weekly_trend_chart import render_weekly_trend_chart
+from src.components.dashboard.report_panel import render_report_panel
 from src.services.detection_service import (
     get_daily_defects,
     get_database_stats,
     get_defect_types_distribution,
     get_recent_detections,
+    get_weekly_trend,
+    get_weekly_report,
+    export_defect_logs_csv,
+    export_daily_stats_csv,
 )
 
 _RANGE_DAYS = {"7d": 7, "30d": 30, "90d": 90}
@@ -24,12 +30,12 @@ def page_dashboard():
         </div>
     """, unsafe_allow_html=True)
 
-    # ── Production Status hero card ──────────────────────────
+    # ── Production Status hero card ──────────────────────────────────────
     stats_all = get_database_stats(
         datetime.now().date() - timedelta(days=30),
         datetime.now().date(),
     )
-    accuracy = max(0, 100 - stats_all["defect_rate"])
+    accuracy   = max(0, 100 - stats_all["defect_rate"])
     throughput = round(stats_all["total_analyzed"] / 30 / 24, 1)
 
     st.markdown(f"""
@@ -46,7 +52,7 @@ def page_dashboard():
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # ── Time range selector ──────────────────────────────────
+    # ── Time range selector ──────────────────────────────────────────────
     col_tabs, _, col_refresh = st.columns([0.5, 0.35, 0.15])
     with col_tabs:
         selected = st.radio(
@@ -59,23 +65,37 @@ def page_dashboard():
         st.markdown("<br>", unsafe_allow_html=True)
         st.button("↻ Refresh", use_container_width=True)
 
-    days = _RANGE_DAYS[selected]
+    days       = _RANGE_DAYS[selected]
     start_date = datetime.now().date() - timedelta(days=days)
     end_date   = datetime.now().date()
+    stats      = get_database_stats(start_date, end_date)
 
-    stats = get_database_stats(start_date, end_date)
-
-    # ── KPI row ──────────────────────────────────────────────
+    # ── KPI row ──────────────────────────────────────────────────────────
     st.markdown("<br>", unsafe_allow_html=True)
     render_kpi_row(stats)
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # ── Charts ───────────────────────────────────────────────
+    # ── Charts row: daily trend + defect distribution ────────────────────
     ch1, ch2 = st.columns(2)
     with ch1:
         render_daily_chart(get_daily_defects(start_date, end_date))
     with ch2:
         render_distribution_chart(get_defect_types_distribution(start_date, end_date))
 
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # ── Weekly trend + report panel (teammate integration) ───────────────
+    col_chart, col_report = st.columns([0.62, 0.38])
+    with col_chart:
+        render_weekly_trend_chart(get_weekly_trend())
+    with col_report:
+        render_report_panel(
+            report=get_weekly_report(),
+            defect_csv=export_defect_logs_csv(),
+            stats_csv=export_daily_stats_csv(),
+        )
+
     st.markdown("---")
+
+    # ── Recent detections table ──────────────────────────────────────────
     render_recent_table(get_recent_detections(10))
